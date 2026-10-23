@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing URL Risk Checker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-badge">
+                <span class="shield-icon">🛡️</span>
+                <span class="badge-tag">Rule-Based Analyzer</span>
+            </div>
+            <h1>Phishing URL Risk Checker</h1>
+            <p class="subtitle">
+                Inspect suspicious links for common phishing patterns using Core Java heuristic rules.
+            </p>
+        </header>
+
+        <!-- Main Card: Input & Controls -->
+        <main class="main-card">
+            <section class="input-section">
+                <label for="urlInput" class="input-label">Enter URL to analyze:</label>
+                <div class="input-group">
+                    <span class="input-icon">🔗</span>
+                    <input 
+                        type="text" 
+                        id="urlInput" 
+                        placeholder="e.g. https://paypal-security-update.com/verify-account" 
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <button id="clearBtn" class="btn-clear" title="Clear input" aria-label="Clear">✕</button>
+                    <button id="checkBtn" class="btn-primary">
+                        <span class="btn-text">Check Risk</span>
+                        <span class="btn-spinner" id="spinner"></span>
+                    </button>
+                </div>
+
+                <!-- Input Validation Message Container -->
+                <div id="validationError" class="validation-message" role="alert"></div>
+
+                <!-- Quick Test Examples -->
+                <div class="sample-urls">
+                    <span class="sample-label">Try sample URLs:</span>
+                    <div class="sample-chips">
+                        <button type="button" class="chip chip-safe" data-url="https://www.wikipedia.org">
+                            🟢 Safe URL
+                        </button>
+                        <button type="button" class="chip chip-warning" data-url="http://paypal-security-update.com/login">
+                            🟡 Typosquat + HTTP
+                        </button>
+                        <button type="button" class="chip chip-danger" data-url="http://192.168.1.1/banking/login-verify">
+                            🔴 Raw IP Address
+                        </button>
+                        <button type="button" class="chip chip-danger" data-url="https://google.com@attacker-site.com/signin">
+                            🔴 '@' Obfuscation
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="results-section hidden">
+                <div class="results-header">
+                    <h2>Analysis Results</h2>
+                    <span id="targetUrlDisplay" class="url-display"></span>
+                </div>
+
+                <!-- Risk Badge & Meter Card -->
+                <div class="risk-card" id="riskCard">
+                    <div class="risk-badge-container">
+                        <span class="risk-badge-label">Assessed Risk Level</span>
+                        <div id="riskBadge" class="risk-badge">Low Risk</div>
+                    </div>
+
+                    <div class="meter-container">
+                        <div class="meter-labels">
+                            <span>Threat Score</span>
+                            <span id="riskScoreText" class="score-text">0 / 100</span>
+                        </div>
+                        <div class="meter-track">
+                            <div id="meterFill" class="meter-fill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- URL Anatomy Details -->
+                <div class="url-anatomy-grid" id="anatomyGrid">
+                    <div class="anatomy-item">
+                        <span class="item-title">Protocol</span>
+                        <span id="anatomyProtocol" class="item-value">-</span>
+                    </div>
+                    <div class="anatomy-item">
+                        <span class="item-title">Host / Domain</span>
+                        <span id="anatomyHost" class="item-value">-</span>
+                    </div>
+                    <div class="anatomy-item">
+                        <span class="item-title">Length</span>
+                        <span id="anatomyLength" class="item-value">-</span>
+                    </div>
+                    <div class="anatomy-item">
+                        <span class="item-title">Flagged Rules</span>
+                        <span id="anatomyRulesCount" class="item-value">-</span>
+                    </div>
+                </div>
+
+                <!-- Reasons & Rule Findings List -->
+                <div class="reasons-section">
+                    <h3>Identified Indicators & Reasons</h3>
+                    <ul id="reasonsList" class="reasons-list">
+                        <!-- Populated dynamically by JavaScript -->
+                    </ul>
+                </div>
+
+                <!-- Mandatory Security Disclaimer -->
+                <div class="disclaimer-banner">
+                    <span class="disclaimer-icon">ℹ️</span>
+                    <div>
+                        <strong>Important Security Disclaimer:</strong>
+                        <p>
+                            This is a simple rule-based heuristic checker for educational and demonstration purposes. It is <strong>not a guaranteed phishing detector</strong>. Even a "Low Risk" website could be malicious, and benign sites may occasionally trigger warnings. Never enter sensitive passwords or payment credentials into untrusted websites.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Information / Rules Section -->
+        <section class="info-card">
+            <h2>How This Rule-Based Checker Works</h2>
+            <div class="rules-grid">
+                <div class="rule-box">
+                    <div class="rule-box-header">
+                        <span class="rule-box-icon">@</span>
+                        <h4>'@' Symbol Confusion</h4>
+                    </div>
+                    <p>In standard URLs, text before the <code>@</code> symbol is treated as user credentials. Phishers use this to fake a trusted brand name while directing visitors to a malicious host.</p>
+                </div>
+
+                <div class="rule-box">
+                    <div class="rule-box-header">
+                        <span class="rule-box-icon">🌐</span>
+                        <h4>Raw IP Addresses</h4>
+                    </div>
+                    <p>Legitimate organizations use registered domain names. Attackers often host phishing pages directly on raw IP addresses (e.g. <code>192.168.1.1</code>) to bypass domain registration checks.</p>
+                </div>
+
+                <div class="rule-box">
+                    <div class="rule-box-header">
+                        <span class="rule-box-icon">🔓</span>
+                        <h4>Missing HTTPS</h4>
+                    </div>
+                    <p>Plain <code>http://</code> lacks TLS encryption. Trustworthy login portals and financial services strictly enforce <code>https://</code> to protect submitted data.</p>
+                </div>
+
+                <div class="rule-box">
+                    <div class="rule-box-header">
+                        <span class="rule-box-icon">📏</span>
+                        <h4>Unusually Long URLs</h4>
+                    </div>
+                    <p>Phishing URLs frequently exceed 75 characters, packing excessive parameters, padding, and layered subdomains to conceal fraudulent destinations.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Built with <strong>HTML</strong>, <strong>CSS</strong>, <strong>JavaScript</strong>, and <strong>Core Java</strong> (No external dependencies).</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
